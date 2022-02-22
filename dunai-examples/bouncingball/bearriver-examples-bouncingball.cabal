@@ -20,18 +20,9 @@ executable dunai-examples-bearriver-bouncingball
   build-depends:     base >=4.6 && < 5,
                      SDL,
                      SDL-gfx,
-                     bearriver
-
-                     -- transformers, mtl,
-
-executable dunai-examples-bearriver-bouncingball-yampa
-  main-is: BouncingBall.hs
-  default-language:  Haskell2010
-  ghc-options:       -Wall -fno-warn-unused-do-bind
-  build-depends:     base >=4.6 && < 5,
-                     SDL,
-                     SDL-gfx,
-                     Yampa
+                     transformers,
+                     bearriver,
+                     essence-of-live-coding
 
 source-repository head
   type:     git

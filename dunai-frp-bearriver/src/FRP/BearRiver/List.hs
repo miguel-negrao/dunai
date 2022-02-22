@@ -13,20 +13,20 @@ module FRP.BearRiver.List
   where
 
 -- External imports
-import Data.MonadicStreamFunction.InternalCore (MSF (MSF, unMSF))
+import LiveCoding.InternalCore (Cell (Cell, unMSF))
 
 -- Internal imports
 import FRP.BearRiver (SF)
 
 -- | Signal function that produces additional information about spawning and
 -- discarding SFs.
-newtype ListSF m a b = ListSF { listSF :: SF m a (b, Bool, [ ListSF m a b ]) }
+newtype ListCell (ClockInfoT m) a b = ListSF { listSF :: Cell (ClockInfoT m) a (b, Bool, [ ListCell (ClockInfoT m) a b ]) }
 
 -- | Turn a list of ListSFs into a signal function that concatenates all the
 -- outputs produced by each inner ListSF, at each point, and spawns and
 -- discards ListSFs as indicated by themselves.
 dlSwitch :: Monad m
-         => [ ListSF m a b ] -> SF m a [b]
+         => [ ListCell (ClockInfoT m) a b ] -> Cell (ClockInfoT m) a [b]
 dlSwitch = dlSwitch' . map listSF
 
 -- | Turn a list of SFs that produce ListSFs into a signal function that
@@ -34,8 +34,8 @@ dlSwitch = dlSwitch' . map listSF
 -- and spawns and discards ListSFs as indicated by the SFs themselves.
 dlSwitch' :: forall m a b
           .  Monad m
-          => [ SF m a (b, Bool, [ ListSF m a b ]) ] -> SF m a [b]
-dlSwitch' sfs = MSF $ \a -> do
+          => [ Cell (ClockInfoT m) a (b, Bool, [ ListCell (ClockInfoT m) a b ]) ] -> Cell (ClockInfoT m) a [b]
+dlSwitch' sfs = Cell $ \a -> do
 
   -- Results of applying the initial input to all the SFs inside the ListSF
   --
@@ -50,7 +50,7 @@ dlSwitch' sfs = MSF $ \a -> do
   -- have not died.
   let notDead = filter (\((_b, dead, _newSFs), _contSF) -> not dead) bsfs0
 
-      oldSFs :: [ SF m a (b, Bool, [ListSF m a b]) ]
+      oldSFs :: [ Cell (ClockInfoT m) a (b, Bool, [ListCell (ClockInfoT m) a b]) ]
       oldSFs = map (\((_b, _dead, _newSFs), contSF) -> contSF) notDead
 
   -- Gather new SFs produced in this step. According to the Yampa
@@ -65,11 +65,11 @@ dlSwitch' sfs = MSF $ \a -> do
   newSFs <- fmap snd <$> mapM (\sf -> (unMSF sf a)) contSFs
 
   -- Only here to indicate the type of nsfs.
-  let constraintNSFs :: [ SF m a (b, Bool, [ListSF m a b]) ]
+  let constraintNSFs :: [ Cell (ClockInfoT m) a (b, Bool, [ListCell (ClockInfoT m) a b]) ]
       constraintNSFs = newSFs
 
   -- Put old and new continuation together for future steps
-  let cts :: [ SF m a (b, Bool, [ListSF m a b]) ]
+  let cts :: [ Cell (ClockInfoT m) a (b, Bool, [ListCell (ClockInfoT m) a b]) ]
       cts = oldSFs ++ newSFs
 
   return (bs, dlSwitch' cts)

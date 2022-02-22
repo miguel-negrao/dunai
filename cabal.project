@@ -1,8 +1,9 @@
 packages:
-  dunai/
-  dunai-test/
-  dunai-frp-bearriver/
-  dunai-examples/classicfrp/
-  dunai-examples/bouncingball/
-  dunai-examples/reversefrpzoo/wormholes/
-  dunai-examples/taggingmonad/
+  dunai-frp-bearriver
+  dunai-examples/bouncingball
+
+source-repository-package
+    type: git
+    location: https://github.com/turion/essence-of-live-coding.git
+    tag: 40330d805ef31a61d9220ae0e989bf91005853ce
+    subdir: essence-of-live-coding
